@@ -27,6 +27,9 @@ graph TD
 ## 📁 File Structure
 ```bash
 .
+├── .github/workflows/
+│   ├── aws_deploy.yml           # AWS App Runner CI/CD workflow
+│   └── python-publish.yml       # Python package publishing workflow
 ├── car data.csv                 # Raw dataset
 ├── cars_price_pred.ipynb        # Data analysis and model training notebook
 ├── car_price_prediction_model.pkl # Trained Scikit-Learn model
@@ -37,7 +40,8 @@ graph TD
 ├── conda.yaml                   # Environment dependencies for MLflow
 ├── dockerfile                   # Docker image configuration
 ├── requirements.txt             # Python libraries
-└── carspricepred.yml            # GitHub Actions CI/CD workflow
+├── carspricepred.yml            # Legacy Heroku CI/CD workflow
+└── .gitignore                  # Git ignore file
 ```
 
 ## 📊 Dataset & Features
@@ -78,6 +82,21 @@ To serve the model using MLflow:
 ```bash
 mlflow models serve -m "models:/CarPriceModel/latest" --port 5001
 ```
+
+### ☁️ CI/CD with AWS
+The project is configured for automated deployment to **AWS App Runner** via GitHub Actions.
+
+#### Required GitHub Secrets:
+To use the AWS deployment workflow, add the following secrets to your repository:
+- `AWS_ACCESS_KEY_ID`: Your AWS access key.
+- `AWS_SECRET_ACCESS_KEY`: Your AWS secret key.
+- `AWS_REGION`: e.g., `us-east-1`.
+- `ECR_REPOSITORY`: The name of your Amazon ECR repository.
+- `APP_RUNNER_SERVICE_NAME`: The name of your App Runner service.
+- `AWS_ROLE_ARN`: The IAM role ARN with App Runner access permissions.
+
+#### Trigger Deployment:
+Any push to the `main` branch will trigger the **Build and Deploy to App Runner** job.
 
 ---
 
