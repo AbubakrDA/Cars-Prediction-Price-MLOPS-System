@@ -1,0 +1,7 @@
+name: Car_Price_Prediction_MLOps
+
+conda_env: conda.yaml
+
+entry_points:
+  main:
+    command: "python log_to_mlflow.py"

@@ -1,19 +1,67 @@
-# Car Price Prediction 🚗💰
+# Cars Prediction Price MLOPS System
 
 **Car Price Prediction** is a simple machine learning project that predicts used car prices using regression models. The repository includes an exploratory notebook, a trained model evaluation report, a small dataset, and a FastAPI app for serving predictions.
 
 ---
 
-## 🔍 Project Overview
+## 🏗 Project Architecture
+The system follows a standard MLOps lifecycle to ensure reproducibility, scalability, and ease of deployment.
 
-- **Goal:** Predict the selling price of used cars based on features such as year, mileage, make/model, engine size, and more.
-- **Files of interest:**
-  - `car data.csv` — dataset used for training and evaluation
-  - `cars_price_pred.ipynb` — Jupyter notebook with data exploration, preprocessing, model training, and evaluation
-  - `regression_report.csv` — evaluation metrics and error analysis
-  - `DeployfastApi.py` — FastAPI app to serve predictions
-  - `dockerfile` — Dockerfile to containerize the API
-  - `requirements.txt` — Python dependencies
+```mermaid
+graph TD
+    A[Raw Data: car data.csv] --> B[Data Preprocessing & EDA]
+    B --> C[Model Training: RandomForest/XGBoost/GB]
+    C --> D[Model Evaluation: R2 Score/MAE/MSE]
+    D --> E[Experiment Tracking: MLflow]
+    E --> F[Model Registry: MLflow Model Store]
+    F --> G[Deployment: FastAPI / Docker]
+    G --> H[Inference API]
+```
+
+### Key Components
+1. **Data Layer**: Standard CSV storage with Pandas preprocessing.
+2. **Experimentation**: MLflow Tracking for logging metrics and model parameters.
+3. **Serving Layer**: FastAPI for high-performance inference.
+4. **Containerization**: Docker for environment consistency across stages.
+
+## 📊 Dataset & Features
+The project predicts the selling price of cars based on several features:
+
+- **Year**: Manufacturing year of the car.
+- **Selling_Price**: Target variable (Price in lakhs).
+- **Present_Price**: Current showroom price.
+- **Kms_Driven**: Total mileage.
+- **Fuel_Type**: Petrol, Diesel, or CNG.
+- **Seller_Type**: Dealer or Individual.
+- **Transmission**: Manual or Automatic.
+- **Owner**: Number of previous owners.
+
+## 📈 Model Performance
+Based on experiments, the **Gradient Boosting Regressor** emerged as the top-performing model:
+
+| Model | R2 Score | MAE | MSE | RMSE |
+| :--- | :--- | :--- | :--- | :--- |
+| **Gradient Boosting** | **0.9528** | 0.4839 | 0.4429 | 0.6655 |
+| XGBoost | 0.9386 | 0.5011 | 0.5762 | 0.7591 |
+| Random Forest | 0.9280 | 0.4999 | 0.6765 | 0.8225 |
+| Linear Regression | 0.7564 | 1.0822 | 2.2878 | 1.5125 |
+
+## 🚀 Deployment & MLOps
+This project is equipped with:
+- **MLflow**: Track every run and manage model versions.
+- **Docker**: Easily containerize the application for any cloud environment.
+- **FastAPI**: A ready-to-use production server for real-time predictions.
+
+### Running with MLflow
+To log the current best model:
+```bash
+python log_to_mlflow.py
+```
+
+To serve the model using MLflow:
+```bash
+mlflow models serve -m "models:/CarPriceModel/latest" --port 5001
+```
 
 ---
 
