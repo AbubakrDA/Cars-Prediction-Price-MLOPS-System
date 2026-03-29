@@ -1,180 +1,142 @@
-# Cars Prediction Price MLOPS System
+# 🚗 Cars Prediction Price MLOPS System
 
-**Car Price Prediction** is a simple machine learning project that predicts used car prices using regression models. The repository includes an exploratory notebook, a trained model evaluation report, a small dataset, and a FastAPI app for serving predictions.
+[![MLflow](https://img.shields.io/badge/MLflow-Tracking-blueviolet?style=for-the-badge&logo=mlflow)](https://mlflow.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-Framework-009688?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com/)
+[![Docker](https://img.shields.io/badge/Docker-Container-2496ED?style=for-the-badge&logo=docker)](https://www.docker.com/)
+[![AWS](https://img.shields.io/badge/AWS-App_Runner-FF9900?style=for-the-badge&logo=amazon-aws)](https://aws.amazon.com/apprunner/)
+
+A production-grade End-to-End MLOps pipeline for predicting used car prices. This system integrates experiment tracking, model versioning, automated CI/CD, and scalable cloud deployment.
 
 ---
 
-## 🏗 Project Architecture
-The system follows a standard MLOps lifecycle to ensure reproducibility, scalability, and ease of deployment.
+## 🏗 System Architecture
+
+The project implements a robust MLOps lifecycle designed for scalability and reproducibility.
 
 ```mermaid
 graph TD
-    A[Raw Data: car data.csv] --> B[Data Preprocessing & EDA]
-    B --> C[Model Training: RandomForest/XGBoost/GB]
-    C --> D[Model Evaluation: R2 Score/MAE/MSE]
-    D --> E[Experiment Tracking: MLflow]
-    E --> F[Model Registry: MLflow Model Store]
-    F --> G[Deployment: FastAPI / Docker]
-    G --> H[Inference API]
+    subgraph "Data & Development"
+        A[car data.csv] --> B[Exploratory Data Analysis]
+        B --> C[Preprocessing Pipeline]
+        C --> D[Model Training]
+    end
+
+    subgraph "MLOps Lifecycle (MLflow)"
+        D --> E[MLflow Tracking Server]
+        E --> F[Hyperparameter Logging]
+        E --> G[Metric Analysis]
+        G --> H[Model Registry]
+    end
+
+    subgraph "Deployment Strategy"
+        H --> I{GitHub Actions}
+        I --> J[Dockerize Application]
+        J --> K[Amazon ECR]
+        K --> L[AWS App Runner]
+    end
+
+    L --> M[Inference API]
 ```
 
-### Key Components
-1. **Data Layer**: Standard CSV storage with Pandas preprocessing.
-2. **Experimentation**: MLflow Tracking for logging metrics and model parameters.
-3. **Serving Layer**: FastAPI for high-performance inference.
-4. **Containerization**: Docker for environment consistency across stages.
+### 🛠 Core MLOps Components
+*   **Tracking**: Centralized logging of every experiment run using **MLflow**.
+*   **Registry**: Version-controlled model store to manage transitions from Staging to Production.
+*   **API**: High-performance RESTful API built with **FastAPI**.
+*   **Infrastructure**: Fully containerized with **Docker** and deployed on **AWS App Runner**.
 
-## 📁 File Structure
-```bash
+---
+
+## 📁 Project Structure
+
+```text
 .
 ├── .github/workflows/
-│   ├── aws_deploy.yml           # AWS App Runner CI/CD workflow
-│   └── python-publish.yml       # Python package publishing workflow
-├── car data.csv                 # Raw dataset
-├── cars_price_pred.ipynb        # Data analysis and model training notebook
-├── car_price_prediction_model.pkl # Trained Scikit-Learn model
-├── regression_report.csv        # Metrics report for evaluated models
-├── DeployfastApi.py             # FastAPI inference script
-├── log_to_mlflow.py             # Script to log model/metrics to MLflow
-├── MLproject                    # MLflow project definition
-├── conda.yaml                   # Environment dependencies for MLflow
-├── dockerfile                   # Docker image configuration
-├── requirements.txt             # Python libraries
-├── carspricepred.yml            # Legacy Heroku CI/CD workflow
-└── .gitignore                  # Git ignore file
+│   ├── aws_deploy.yml           # CI/CD: Automated AWS App Runner Deployment
+│   └── python-publish.yml       # CI/CD: Automated Package Publishing
+├── car data.csv                 # Dataset: Raw Vehicle Information
+├── cars_price_pred.ipynb        # Lab-Bench: Interactive Analysis & Prototype
+├── car_price_prediction_model.pkl # Artifact: Serialized Scikit-Learn Model
+├── regression_report.csv        # Benchmarks: Comparative Analytics
+├── DeployfastApi.py             # App: Production Inference Engine
+├── log_to_mlflow.py             # DevOps: MLflow Logging & Registry Migration
+├── MLproject                    # MLOps: Project Entry Definition
+├── conda.yaml                   # Environment: MLflow Spec (Conda)
+├── dockerfile                   # DevOps: Container Image Definition
+├── requirements.txt             # Environment: Python Dependencies
+└── carspricepred.yml            # Legacy: Heroku Workflow
 ```
 
-## 📊 Dataset & Features
-The project predicts the selling price of cars based on several features:
+---
 
-- **Year**: Manufacturing year of the car.
-- **Selling_Price**: Target variable (Price in lakhs).
-- **Present_Price**: Current showroom price.
-- **Kms_Driven**: Total mileage.
-- **Fuel_Type**: Petrol, Diesel, or CNG.
-- **Seller_Type**: Dealer or Individual.
-- **Transmission**: Manual or Automatic.
-- **Owner**: Number of previous owners.
+## 📈 Engineering Performance Metrics
 
-## 📈 Model Performance
-Based on experiments, the **Gradient Boosting Regressor** emerged as the top-performing model:
+After rigorous evaluation across multiple algorithms, the **Gradient Boosting Regressor** was selected as the champion model for its superior accuracy and low generalization error.
 
-| Model | R2 Score | MAE | MSE | RMSE |
-| :--- | :--- | :--- | :--- | :--- |
-| **Gradient Boosting** | **0.9528** | 0.4839 | 0.4429 | 0.6655 |
-| XGBoost | 0.9386 | 0.5011 | 0.5762 | 0.7591 |
-| Random Forest | 0.9280 | 0.4999 | 0.6765 | 0.8225 |
-| Linear Regression | 0.7564 | 1.0822 | 2.2878 | 1.5125 |
+| Algorithm | R² Score | MAE | RMSE |
+| :--- | :--- | :--- | :--- |
+| **Gradient Boosting** | **0.9528** | **0.4839** | **0.6655** |
+| XGBoost | 0.9386 | 0.5011 | 0.7591 |
+| Random Forest | 0.9280 | 0.4999 | 0.8225 |
+| Linear Regression | 0.7564 | 1.0822 | 1.5125 |
 
-## 🚀 Deployment & MLOps
-This project is equipped with:
-- **MLflow**: Track every run and manage model versions.
-- **Docker**: Easily containerize the application for any cloud environment.
-- **FastAPI**: A ready-to-use production server for real-time predictions.
+---
 
-### Running with MLflow
-To log the current best model:
+## 🚀 Deployment Guide
+
+### 1. Local Development
+```bash
+# Clone the system
+git clone https://github.com/AbubakrDA/Cars-Prediction-Price-MLOPS-System.git
+cd Cars-Prediction-Price-MLOPS-System
+
+# Setup Environment
+python -m venv venv
+source venv/Scripts/activate  # venv\Scripts\activate on Windows
+pip install -r requirements.txt
+```
+
+### 2. MLOps Workflow with MLflow
+Log the best model and parameters to the local tracking server:
 ```bash
 python log_to_mlflow.py
+# Start MLflow UI
+mlflow ui
 ```
 
-To serve the model using MLflow:
-```bash
-mlflow models serve -m "models:/CarPriceModel/latest" --port 5001
-```
+### 3. ☁️ CI/CD MLOps Pipeline
+The project features a professional-grade **GitHub Actions** pipeline (`mlops_ci_cd.yml`) that automates the entire lifecycle:
 
-### ☁️ CI/CD with AWS
-The project is configured for automated deployment to **AWS App Runner** via GitHub Actions.
-
-#### Required GitHub Secrets:
-To use the AWS deployment workflow, add the following secrets to your repository:
-- `AWS_ACCESS_KEY_ID`: Your AWS access key.
-- `AWS_SECRET_ACCESS_KEY`: Your AWS secret key.
-- `AWS_REGION`: e.g., `us-east-1`.
-- `ECR_REPOSITORY`: The name of your Amazon ECR repository.
-- `APP_RUNNER_SERVICE_NAME`: The name of your App Runner service.
-- `AWS_ROLE_ARN`: The IAM role ARN with App Runner access permissions.
-
-#### Trigger Deployment:
-Any push to the `main` branch will trigger the **Build and Deploy to App Runner** job.
+1.  **Code Quality (Lint)**: Static analysis with `flake8` to ensure PEP8 compliance.
+2.  **Unit Tests & Model Validation**: Automated testing with `pytest` to verify API logic and model artifact integrity.
+3.  **Containerization**: Building and pushing the optimized Docker image to **Amazon ECR**.
+4.  **Continuous Deployment**: Automated rollout to **AWS App Runner** on every push to `main`.
 
 ---
 
-## ⚙️ Setup & Installation
+## 🧪 Inference API Usage
+Once deployed, interactions with the system are handled via POST requests:
 
-1. Clone the repository:
-
-   ```bash
-   git clone https://github.com/AbubakrDA/Cars-Prediction-Price-MLOPS-System.git
-   cd Cars-Prediction-Price-MLOPS-System
-   ```
-
-2. (Recommended) Create and activate a virtual environment:
-
-   Windows (PowerShell):
-   ```powershell
-   python -m venv .venv
-   .\.venv\Scripts\Activate.ps1
-   ```
-
-3. Install dependencies:
-
-   ```bash
-   pip install -r requirements.txt
-   ```
-
----
-
-## 🚀 Usage
-
-### Run the analysis notebook
-
-Open `cars_price_pred.ipynb` in Jupyter or VS Code and run the cells to reproduce data exploration, preprocessing, training, and evaluation steps.
-
-### Run the API locally
-
-1. Start the API:
-
-```bash
-python DeployfastApi.py
-```
-
-2. By default, the app will be served (e.g., at `http://127.0.0.1:8000`). Use the interactive docs at `/docs` to test prediction endpoints.
-
-### Docker (optional)
-
-Build and run the Docker container:
-
-```bash
-docker build -t car-price-api -f dockerfile .
-docker run -p 8000:8000 car-price-api
+**Endpoint:** `/predict`
+**Payload:**
+```json
+{
+  "Present_Price": 5.59,
+  "Kms_Driven": 27000,
+  "Fuel_Type": 0,
+  "Seller_Type": 0,
+  "Transmission": 0,
+  "Owner": 0,
+  "age": 10
+}
 ```
 
 ---
 
-## 🧪 Model & Evaluation
-
-- The notebook contains the training pipeline and model selection.
-- Results and metrics (MAE, RMSE, R^2) are available in `regression_report.csv`.
-- Tips to improve performance: feature engineering, hyperparameter tuning, and using ensemble models.
-
----
-
-## 🛠️ Contributing
-
-Contributions are welcome — please open an issue or submit a pull request with improvements, bug fixes, or new features.
+## 🤝 Roadmap & Continuous Improvement
+- [ ] Integration of DVC for Data Version Control.
+- [ ] Automated monitoring for Data Drift and Model Decay.
+- [ ] Multi-region AWS deployment using Terraform.
 
 ---
 
-## 📄 License
-
-This project is provided under the MIT License (or replace with your chosen license).
-
----
-
-## ✉️ Contact
-
-For questions or feedback, open an issue or reach out via the repository contact information.
-
-
-**Happy modeling!** ✅
+*Authored with precision by an MLOps mindset.* 🚀
