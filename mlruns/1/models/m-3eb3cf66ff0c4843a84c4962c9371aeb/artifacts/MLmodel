@@ -1,0 +1,23 @@
+artifact_path: file:D:/Data Science And Data Analytics/ML/my project/Car Price Prediction/mlruns/1/models/m-3eb3cf66ff0c4843a84c4962c9371aeb/artifacts
+flavors:
+  python_function:
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.sklearn
+    model_path: model.pkl
+    predict_fn: predict
+    python_version: 3.14.2
+  sklearn:
+    code: null
+    pickled_model: model.pkl
+    serialization_format: cloudpickle
+    sklearn_version: 1.8.0
+    skops_trusted_types: null
+mlflow_version: 3.10.1
+model_id: m-3eb3cf66ff0c4843a84c4962c9371aeb
+model_size_bytes: 1896842
+model_uuid: m-3eb3cf66ff0c4843a84c4962c9371aeb
+prompts: null
+run_id: e004cc29782e4ad393db24b474d92d99
+utc_time_created: '2026-03-29 16:06:22.556071'
