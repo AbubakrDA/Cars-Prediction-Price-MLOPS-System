@@ -24,6 +24,22 @@ graph TD
 3. **Serving Layer**: FastAPI for high-performance inference.
 4. **Containerization**: Docker for environment consistency across stages.
 
+## 📁 File Structure
+```bash
+.
+├── car data.csv                 # Raw dataset
+├── cars_price_pred.ipynb        # Data analysis and model training notebook
+├── car_price_prediction_model.pkl # Trained Scikit-Learn model
+├── regression_report.csv        # Metrics report for evaluated models
+├── DeployfastApi.py             # FastAPI inference script
+├── log_to_mlflow.py             # Script to log model/metrics to MLflow
+├── MLproject                    # MLflow project definition
+├── conda.yaml                   # Environment dependencies for MLflow
+├── dockerfile                   # Docker image configuration
+├── requirements.txt             # Python libraries
+└── carspricepred.yml            # GitHub Actions CI/CD workflow
+```
+
 ## 📊 Dataset & Features
 The project predicts the selling price of cars based on several features:
 
@@ -70,8 +86,8 @@ mlflow models serve -m "models:/CarPriceModel/latest" --port 5001
 1. Clone the repository:
 
    ```bash
-   git clone <repository-url>
-   cd "Car Price Prediction"
+   git clone https://github.com/AbubakrDA/Cars-Prediction-Price-MLOPS-System.git
+   cd Cars-Prediction-Price-MLOPS-System
    ```
 
 2. (Recommended) Create and activate a virtual environment:
