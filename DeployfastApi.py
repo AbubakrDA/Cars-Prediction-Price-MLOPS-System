@@ -46,15 +46,24 @@ def predict_price(features: CarFeatures):
     # 4. Prepare data as DataFrame (required for 2-level pipeline)
     input_df = pd.DataFrame([features.model_dump()])
     
+    # 5. Data Drift & Decay Logging: Save the incoming query distribution
+    log_file = "inference_logs.csv"
+    try:
+        input_df.to_csv(log_file, mode='a', header=not os.path.exists(log_file), index=False)
+    except Exception as e:
+        print(f"Warning: Failed to log inference for Data Drift tracking: {e}")
+
     # Generate prediction from the pipeline
     prediction = model.predict(input_df)
     
+    # Optional logic: For MSLE protection, ensure prediction is positive
+    pred_val = abs(prediction[0])
+    
     return {
-        'predicted_price_lakhs': round(float(prediction[0]), 2),
-        'currency': 'Lakhs (INR)'
+        'predicted_price_lakhs': float(round(pred_val, 2)),
+        'currency': 'INR (Lakhs)',
+        'note': 'Model retrieved from MLflow Tracking'
     }
 
 if __name__ == '__main__':
     uvicorn.run(app, host='0.0.0.0', port=8000)
-
-    

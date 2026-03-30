@@ -28,6 +28,11 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
+      - name: Pull Data from DVC
+        run: |
+          pip install dvc dvc-s3
+          dvc pull
+
       - name: Build, Tag, and Push Image to Amazon ECR
         id: build-image
         env:
@@ -39,15 +44,16 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-      - name: Deploy to AWS App Runner
-        id: deploy-apprunner
-        uses: awslabs/amazon-app-runner-deploy@main
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
         with:
-          service: ${{ secrets.APP_RUNNER_SERVICE_NAME }}
-          image: ${{ steps.build-image.outputs.image }}
-          access-role-arn: ${{ secrets.AWS_ROLE_ARN }}
-          region: ${{ secrets.AWS_REGION }}
-          cpu: 1
-          memory: 2
-          port: 8000
-          wait-for-service-stability-seconds: 600
+          terraform_version: 1.5.0
+
+      - name: Terraform Deploy App Runner & Buckets
+        env:
+          TF_VAR_ecr_image_uri: ${{ steps.build-image.outputs.image }}
+          TF_VAR_app_runner_instance_role_arn: ${{ secrets.AWS_ROLE_ARN }}
+        run: |
+          cd terraform
+          terraform init
+          terraform apply -auto-approve
