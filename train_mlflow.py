@@ -4,8 +4,9 @@ import pandas as pd
 import numpy as np
 import datetime
 import os
+import joblib
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
+from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error, explained_variance_score, median_absolute_error, mean_absolute_percentage_error, mean_squared_log_error
 from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import StandardScaler, OrdinalEncoder
@@ -73,6 +74,10 @@ def train_and_log_models():
     print(f"Connected to MLflow at: {MLFLOW_TRACKING_URI}")
     print(f"Experiment: {experiment_name}\n")
 
+    best_r2 = -float("inf")
+    best_pipeline = None
+    best_model_name = ""
+
     for name, model in models.items():
         with mlflow.start_run(run_name=f"Level2_{name}"):
             # Build 2-level Pipeline
@@ -92,6 +97,16 @@ def train_and_log_models():
             mae = mean_absolute_error(y_test, y_pred)
             mse = mean_squared_error(y_test, y_pred)
             rmse = np.sqrt(mse)
+            evs = explained_variance_score(y_test, y_pred)
+            medae = median_absolute_error(y_test, y_pred)
+            mape = mean_absolute_percentage_error(y_test, y_pred)
+            
+            # mean_squared_log_error requires non-negative values
+            try:
+                msle = mean_squared_log_error(y_test, np.clip(y_pred, 0, None))
+            except Exception as e:
+                msle = None
+                print(f"  Could not calculate MSLE for {name}: {e}")
             
             # Log Parameters
             mlflow.log_param("model_name", name)
@@ -103,6 +118,11 @@ def train_and_log_models():
             mlflow.log_metric("MAE", mae)
             mlflow.log_metric("MSE", mse)
             mlflow.log_metric("RMSE", rmse)
+            mlflow.log_metric("Explained_Variance", evs)
+            mlflow.log_metric("Median_AE", medae)
+            mlflow.log_metric("MAPE", mape)
+            if msle is not None:
+                mlflow.log_metric("MSLE", msle)
             
             # Log the whole 2-level Pipeline
             mlflow.sklearn.log_model(
@@ -111,7 +131,19 @@ def train_and_log_models():
                 registered_model_name=f"CarPrice_{name}"
             )
             
+            # Track the overall best model for local artifact generation
+            if r2 > best_r2:
+                best_r2 = r2
+                best_pipeline = pipeline
+                best_model_name = name
+            
             print(f"Logged {name}: R2={r2:.4f}, RMSE={rmse:.4f}")
+
+    # After the loop, save the best model to a local file for Docker AWS deployment
+    if best_pipeline:
+        print(f"\nSaving best model ({best_model_name} with R2={best_r2:.4f}) to car_price_prediction_model.pkl for offline deployment...")
+        joblib.dump(best_pipeline, 'car_price_prediction_model.pkl')
+        print("Model saved successfully.")
 
 if __name__ == "__main__":
     train_and_log_models()

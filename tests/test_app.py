@@ -9,7 +9,8 @@ def test_index():
     """Verify that the API root is accessible."""
     response = client.get("/")
     assert response.status_code == 200
-    assert response.json() == {'message': 'Welcome to Car Price Prediction API'}
+    data = response.json()
+    assert data["message"] == "Welcome to Car Price Prediction API"
 
 def test_model_exists():
     """Ensure the model artifact is present in the root directory."""
@@ -20,14 +21,15 @@ def test_prediction():
     payload = {
         "Present_Price": 5.59,
         "Kms_Driven": 27000,
-        "Fuel_Type": 0,
-        "Seller_Type": 0,
-        "Transmission": 0,
+        "Fuel_Type": "Petrol",
+        "Seller_Type": "Dealer",
+        "Transmission": "Manual",
         "Owner": 0,
         "age": 10
     }
     response = client.post("/predict", json=payload)
     assert response.status_code == 200
     data = response.json()
-    assert "predicted_price" in data
-    assert isinstance(data["predicted_price"], float)
+    assert "predicted_price_lakhs" in data
+    assert "currency" in data
+    assert isinstance(data["predicted_price_lakhs"], float)
