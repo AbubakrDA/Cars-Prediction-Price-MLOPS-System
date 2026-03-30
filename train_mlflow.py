@@ -144,6 +144,19 @@ def train_and_log_models():
         print(f"\nSaving best model ({best_model_name} with R2={best_r2:.4f}) to car_price_prediction_model.pkl for offline deployment...")
         joblib.dump(best_pipeline, 'car_price_prediction_model.pkl')
         print("Model saved successfully.")
+        
+        # Transition best model to 'Champion' alias in MLflow Registry
+        try:
+            from mlflow.tracking import MlflowClient
+            client = MlflowClient()
+            model_reg_name = f"CarPrice_{best_model_name}"
+            latest_versions = client.search_model_versions(f"name='{model_reg_name}'")
+            if latest_versions:
+                latest_version = max([int(v.version) for v in latest_versions])
+                client.set_registered_model_alias(model_reg_name, "Champion", str(latest_version))
+                print(f"Registered '{model_reg_name}' version {latest_version} as the 'Champion' model in MLflow!")
+        except Exception as e:
+            print(f"Could not assign champion alias: {e}")
 
 if __name__ == "__main__":
     train_and_log_models()

@@ -16,9 +16,9 @@ The project implements a robust MLOps lifecycle designed for scalability and rep
 ```mermaid
 graph TD
     subgraph "Data & Development"
-        A[car data.csv] --> B[Exploratory Data Analysis]
-        B --> C[Preprocessing Pipeline]
-        C --> D[Model Training]
+        A[car data.csv] --> B[train_mlflow.py]
+        B --> C[2-Level Scikit-Learn Pipeline]
+        C --> D[Model Training & Evaluation]
     end
 
     subgraph "MLOps Lifecycle (MLflow)"
@@ -26,16 +26,17 @@ graph TD
         E --> F[Hyperparameter Logging]
         E --> G[Metric Analysis]
         G --> H[Model Registry]
+        H -.->|Best Pipeline Exported| I{car_price_prediction_model.pkl}
     end
 
-    subgraph "Deployment Strategy"
-        H --> I{GitHub Actions}
-        I --> J[Dockerize Application]
-        J --> K[Amazon ECR]
-        K --> L[AWS App Runner]
+    subgraph "Deployment Strategy (AWS)"
+        I --> J{GitHub Actions CI/CD}
+        J --> K[Dockerize FastAPI Application]
+        K --> L[Amazon ECR]
+        L --> M[AWS App Runner]
     end
 
-    L --> M[Inference API]
+    M --> N[String-Based Inference API]
 ```
 
 ### 🛠 Core MLOps Components
@@ -52,18 +53,19 @@ graph TD
 .
 ├── .github/workflows/
 │   ├── aws_deploy.yml           # CI/CD: Automated AWS App Runner Deployment
-│   └── python-publish.yml       # CI/CD: Automated Package Publishing
+│   └── mlops_ci_cd.yml          # CI/CD: Automated Package Publishing & Tests
 ├── car data.csv                 # Dataset: Raw Vehicle Information
 ├── cars_price_pred.ipynb        # Lab-Bench: Interactive Analysis & Prototype
 ├── car_price_prediction_model.pkl # Artifact: Serialized Scikit-Learn Model
-├── regression_report.csv        # Benchmarks: Comparative Analytics
+├── pipeline_demo.py             # Script: Standalone ML Pipeline construction
 ├── DeployfastApi.py             # App: Production Inference Engine
-├── log_to_mlflow.py             # DevOps: MLflow Logging & Registry Migration
+├── test_api_client.py           # Testing: Bulk JSON async testing script
+├── train_mlflow.py              # DevOps: MLflow Logging, Registry & Offline Artifact Builder
 ├── MLproject                    # MLOps: Project Entry Definition
 ├── conda.yaml                   # Environment: MLflow Spec (Conda)
 ├── dockerfile                   # DevOps: Container Image Definition
 ├── requirements.txt             # Environment: Python Dependencies
-└── carspricepred.yml            # Legacy: Heroku Workflow
+└── tests/                       # Environment: Pytest Validations
 ```
 
 ---
@@ -122,9 +124,9 @@ Once deployed, interactions with the system are handled via POST requests:
 {
   "Present_Price": 5.59,
   "Kms_Driven": 27000,
-  "Fuel_Type": 0,
-  "Seller_Type": 0,
-  "Transmission": 0,
+  "Fuel_Type": "Petrol",
+  "Seller_Type": "Dealer",
+  "Transmission": "Manual",
   "Owner": 0,
   "age": 10
 }
