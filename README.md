@@ -1,141 +1,99 @@
-# 🚗 Cars Prediction Price MLOPS System
+# 🚗 Car Price Prediction MLOps Portfolio
 
-[![MLflow](https://img.shields.io/badge/MLflow-Tracking-blueviolet?style=for-the-badge&logo=mlflow)](https://mlflow.org/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-Framework-009688?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com/)
-[![Docker](https://img.shields.io/badge/Docker-Container-2496ED?style=for-the-badge&logo=docker)](https://www.docker.com/)
-[![AWS](https://img.shields.io/badge/AWS-App_Runner-FF9900?style=for-the-badge&logo=amazon-aws)](https://aws.amazon.com/apprunner/)
+This repository demonstrates an end-to-end Machine Learning pipeline for predicting used car prices. It is built to showcase a realistic, junior-to-mid-level MLOps workflow focusing on reproducibility, sensible pipeline separation, and explicit deployment mechanics.
 
-A production-grade End-to-End MLOps pipeline for predicting used car prices. This system integrates experiment tracking, model versioning, automated CI/CD, and scalable cloud deployment.
+Unlike "demo" projects, this repository enforces strict boundaries between Data Engineering, Training, and API Serving, leveraging legitimate tracking software rather than isolated `.pkl` artifacts where possible.
 
 ---
 
-## 🏗 System Architecture
+## 🏗 System Architecture & Design Choices
 
-The project implements a robust MLOps lifecycle designed for scalability and reproducibility.
+### Core Workflow
 
-```mermaid
-graph TD
-    subgraph "Data & Development"
-        A[car data.csv] --> B[train_mlflow.py]
-        B --> C[2-Level Scikit-Learn Pipeline]
-        C --> D[Model Training & Evaluation]
-    end
-
-    subgraph "MLOps Lifecycle (MLflow)"
-        D --> E[MLflow Tracking Server]
-        E --> F[Hyperparameter Logging]
-        E --> G[Metric Analysis]
-        G --> H[Model Registry]
-        H -.->|Best Pipeline Exported| I{car_price_prediction_model.pkl}
-    end
-
-    subgraph "Deployment Strategy (AWS)"
-        I --> J{GitHub Actions CI/CD}
-        J --> K[Dockerize FastAPI Application]
-        K --> L[Amazon ECR]
-        L --> M[AWS App Runner]
-    end
-
-    M --> N[String-Based Inference API]
-```
-
-### 🛠 Core MLOps Components
-*   **Tracking**: Centralized logging of every experiment run using **MLflow**.
-*   **Registry**: Version-controlled model store to manage transitions from Staging to Production.
-*   **API**: High-performance RESTful API built with **FastAPI**.
-*   **Infrastructure**: Provisioned via **Terraform** for multi-region **AWS App Runner** deployments, orchestrated by **Apache Airflow**.
+1.  **Data Preparation**: Deterministic feature engineering (`src/pipelines/data_prep.py`) ensuring identical transformations are applied during training and inference.
+2.  **Experiment Tracking**: `src/pipelines/train.py` trains multiple models and logs hyperparameters, metrics, and serialized artifacts with input signatures directly to **MLflow**.
+3.  **Inference Serving**: A FastAPI application (`src/api/app.py`) dynamically pulls the "Champion" model via MLflow URI on startup instead of relying on manually copied binaries.
+4.  **Continuous Monitoring**: `src/pipelines/basic_monitoring.py` implements a real Statistical KS-Test comparing incoming traffic against training baselines to detect potential data drift (concept drift).
+5.  **Orchestration**: A professional DAG via **Apache Airflow** schedules the retraining and monitoring phases asynchronously.
 
 ---
 
-## 📁 Project Structure
+## 📁 Repository Structure
 
 ```text
 .
-├── .github/workflows/
-│   ├── aws_deploy.yml           # CI/CD: Automated AWS App Runner Deployment
-│   └── mlops_ci_cd.yml          # CI/CD: Automated Package Publishing & Tests
-├── car data.csv                 # Dataset: Raw Vehicle Information
-├── cars_price_pred.ipynb        # Lab-Bench: Interactive Analysis & Prototype
-├── car_price_prediction_model.pkl # Artifact: Serialized Scikit-Learn Model
-├── pipeline_demo.py             # Script: Standalone ML Pipeline construction
-├── DeployfastApi.py             # App: Production Inference Engine
-├── test_api_client.py           # Testing: Bulk JSON async testing script
-├── train_mlflow.py              # DevOps: MLflow Logging, Registry & Offline Artifact Builder
-├── MLproject                    # MLOps: Project Entry Definition
-├── conda.yaml                   # Environment: MLflow Spec (Conda)
-├── dockerfile                   # DevOps: Container Image Definition
-├── requirements.txt             # Environment: Python Dependencies
-└── tests/                       # Environment: Pytest Validations
+├── src/                             # Core Python applications
+│   ├── api/                         # FastAPI inference microservice
+│   │   └── app.py
+│   └── pipelines/                   # MLOps ML workflows
+│       ├── data_prep.py             # Deterministic shared feature prep
+│       ├── train.py                 # MLflow tracking and model training
+│       └── basic_monitoring.py      # Statistical KS-Test drift validation
+├── dags/                            # Apache Airflow orchestration DAGs
+│   └── mlops_pipeline_dag.py
+├── tests/                           # Pytest suite targeting API robustness
+│   ├── test_api.py
+│   └── test_api_client.py           # Stress-test script
+├── infra/
+│   └── terraform/                   # AWS App Runner config templates
+├── Dockerfile                       # Minimal serving container (FastAPI only)
+├── docker-compose.yaml              # Local Airflow cluster configuration
+├── requirements-*.txt               # Hard-isolated dependency domains
+└── README.md
 ```
 
 ---
 
-## 📈 Engineering Performance Metrics
+## 🚦 Current Implementation Status
+*An honest record of what is functioning, what is simulated, and what is planned.*
 
-After rigorous evaluation across multiple algorithms, the **Gradient Boosting Regressor** was selected as the champion model for its superior accuracy and low generalization error.
+**What IS completely implemented:**
+*   **MLflow Integration**: The code logs full experiments natively and the API serves the model retrieved *directly* from trackable `models:/` endpoints (or local registry paths).
+*   **Dependency Hygiene**: Training dependencies (`xgboost`, `scipy`) are segregated from API serving dependencies (`fastapi`, `pydantic`), enabling highly cacheable Docker builds.
+*   **Reproducibility**: Dates for features like `car age` strictly lock to `REFERENCE_YEAR=2024` avoiding non-deterministic rot over time.
+*   **Basic Drift Monitoring**: We use the Kolmogorov-Smirnov check to flag shifts between training (`car data.csv`) and logged inference queries (`inference_logs.csv`).
+*   **API Validation**: The `/predict` endpoint uses Pydantic's strict regex and bounds features ensuring malformed data strictly fails before entering the ML layer.
 
-| Algorithm | R² Score | MAE | RMSE |
-| :--- | :--- | :--- | :--- |
-| **Gradient Boosting** | **0.9528** | **0.4839** | **0.6655** |
-| XGBoost | 0.9386 | 0.5011 | 0.7591 |
-| Random Forest | 0.9280 | 0.4999 | 0.8225 |
-| Linear Regression | 0.7564 | 1.0822 | 1.5125 |
+**What is PARTIALLY or NOT fully hardened (Interview Transparency):**
+*   **Terraform & Remote State**: The AWS Apprunner `.tf` files exist as conceptual structure, but state locks, proper Secrets Management (Variables/KMS), and CI/CD IAM boundaries are outside the scope of this portfolio piece.
+*   **DVC (Data Version Control)**: `.dvc` tracking exists locally but does not strictly validate remote pushing in the action runner.
+*   **Monitoring Scale**: The `basic_monitoring.py` script replaces heavier enterprise dependencies (like Evidently AI) for portfolio footprint viability.
 
 ---
 
-## 🚀 Deployment Guide
+## 🚀 Setup & Execution (Local)
 
-### 1. Local Development
+### 1. Model Training Workflow
+
+Initialize your environment, train the candidate models, and log the results into MLflow.
+
 ```bash
-# Clone the system
-git clone https://github.com/AbubakrDA/Cars-Prediction-Price-MLOPS-System.git
-cd Cars-Prediction-Price-MLOPS-System
-
-# Setup Environment
+# Set up a clean environment
 python -m venv venv
-source venv/Scripts/activate  # venv\Scripts\activate on Windows
-pip install -r requirements.txt
-```
+# On Windows: venv\Scripts\activate | On Unix: source venv/bin/activate
+pip install -r requirements-train.txt
 
-### 2. MLOps Workflow with MLflow
-Log the best model and parameters to the local tracking server:
-```bash
-python log_to_mlflow.py
-# Start MLflow UI
+# Run the training pipeline
+python src/pipelines/train.py
+
+# Launch the Tracking Server UI (Optional)
 mlflow ui
+# View experiments at http://127.0.0.1:5000
 ```
 
-### 3. ⏱️ Pipeline Orchestration with Airflow
-The project uses Apache Airflow to schedule and manage the end-to-end MLOps pipeline (model training and drift monitoring).
+### 2. Standalone Inference Server
+The API reads `MODEL_URI` matching the newly generated MLflow artifact.
 
-To run Airflow locally using Docker Compose:
 ```bash
-# Initialize the database
-docker compose up airflow-init
-
-# Start all Airflow services
-docker compose up -d
+# Isolate serving dependencies
+pip install -r requirements-api.txt
+# Launch API 
+uvicorn src.api.app:app --host 0.0.0.0 --port 8000
 ```
-Access the Airflow UI at `http://localhost:8080` (default login is `airflow`/`airflow`), and enable the `car_price_mlops_pipeline` DAG.
-
-### 4. ☁️ CI/CD MLOps Pipeline
-The project features a professional-grade **GitHub Actions** pipeline (`mlops_ci_cd.yml`) that automates the entire lifecycle:
-
-1.  **Code Quality (Lint)**: Static analysis with `flake8` to ensure PEP8 compliance.
-2.  **Unit Tests & Model Validation**: Automated testing with `pytest` to verify API logic and model artifact integrity.
-3.  **Containerization**: Building and pushing the optimized Docker image to **Amazon ECR**.
-4.  **Continuous Deployment**: Automated rollout to **AWS App Runner** on every push to `main`.
-
----
-
-## 🧪 Inference API Usage
-Once deployed, interactions with the system are handled via POST requests:
-
-**Endpoint:** `/predict`
-**Payload:**
+Then send a payload to `http://localhost:8000/predict`:
 ```json
 {
-  "Present_Price": 5.59,
+  "Present_Price": 5.5,
   "Kms_Driven": 27000,
   "Fuel_Type": "Petrol",
   "Seller_Type": "Dealer",
@@ -145,13 +103,21 @@ Once deployed, interactions with the system are handled via POST requests:
 }
 ```
 
+### 3. Continuous Orchestration (Airflow)
+Local automated scheduling via official docker bindings.
+
+```bash
+pip install -r requirements-orchestration.txt
+docker compose up airflow-init
+docker compose up -d
+```
+Access `http://localhost:8080` to toggle the DAG `car_price_mlops_pipeline`.
+
+### 4. Developer Testing
+```bash
+pip install -r requirements-dev.txt
+pytest tests/
+```
+
 ---
-
-## 🤝 Roadmap & Continuous Improvement
-- [x] Integration of DVC for Data Version Control.
-- [x] Automated monitoring for Data Drift and Model Decay (Orchestrated by Apache Airflow).
-- [x] Multi-region AWS deployment using Terraform.
-
----
-
-*Authored with precision by an MLOps mindset.* 🚀
+*Developed as a realistic representation of production MLOps practices.*
