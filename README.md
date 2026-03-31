@@ -43,7 +43,7 @@ graph TD
 *   **Tracking**: Centralized logging of every experiment run using **MLflow**.
 *   **Registry**: Version-controlled model store to manage transitions from Staging to Production.
 *   **API**: High-performance RESTful API built with **FastAPI**.
-*   **Infrastructure**: Fully containerized with **Docker** and deployed on **AWS App Runner**.
+*   **Infrastructure**: Provisioned via **Terraform** for multi-region **AWS App Runner** deployments, orchestrated by **Apache Airflow**.
 
 ---
 
@@ -105,7 +105,20 @@ python log_to_mlflow.py
 mlflow ui
 ```
 
-### 3. ☁️ CI/CD MLOps Pipeline
+### 3. ⏱️ Pipeline Orchestration with Airflow
+The project uses Apache Airflow to schedule and manage the end-to-end MLOps pipeline (model training and drift monitoring).
+
+To run Airflow locally using Docker Compose:
+```bash
+# Initialize the database
+docker compose up airflow-init
+
+# Start all Airflow services
+docker compose up -d
+```
+Access the Airflow UI at `http://localhost:8080` (default login is `airflow`/`airflow`), and enable the `car_price_mlops_pipeline` DAG.
+
+### 4. ☁️ CI/CD MLOps Pipeline
 The project features a professional-grade **GitHub Actions** pipeline (`mlops_ci_cd.yml`) that automates the entire lifecycle:
 
 1.  **Code Quality (Lint)**: Static analysis with `flake8` to ensure PEP8 compliance.
@@ -135,9 +148,9 @@ Once deployed, interactions with the system are handled via POST requests:
 ---
 
 ## 🤝 Roadmap & Continuous Improvement
-- [ ] Integration of DVC for Data Version Control.
-- [ ] Automated monitoring for Data Drift and Model Decay.
-- [ ] Multi-region AWS deployment using Terraform.
+- [x] Integration of DVC for Data Version Control.
+- [x] Automated monitoring for Data Drift and Model Decay (Orchestrated by Apache Airflow).
+- [x] Multi-region AWS deployment using Terraform.
 
 ---
 
